@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#176b3a">
+<title>المتجر الزراعي</title>
+<style>
+:root{--green:#176b3a;--green2:#23884c;--bg:#f3f7f2;--text:#1d2a22;--muted:#66756b;--card:#fff;--border:#dce6dd}
+*{box-sizing:border-box}body{margin:0;font-family:Tahoma,Arial,sans-serif;background:var(--bg);color:var(--text)}
+header{background:linear-gradient(135deg,#14552f,#27884d);color:white;padding:22px 16px 18px;position:sticky;top:0;z-index:3;box-shadow:0 3px 12px #0001}
+.headerrow{max-width:1000px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.brand{font-size:23px;font-weight:bold}.subtitle{font-size:13px;opacity:.9;margin-top:5px}
+button{font-family:inherit;cursor:pointer;border:0;border-radius:10px;padding:10px 14px;font-weight:bold}
+.adminbtn{background:#fff;color:var(--green)}.primary{background:var(--green);color:white}.secondary{background:#e7f1e9;color:var(--green)}.danger{background:#fee8e7;color:#a12c24}
+main{max-width:1000px;margin:18px auto;padding:0 14px}
+.searchrow{display:flex;gap:8px;margin:12px 0}.searchrow input{flex:1}
+input,select{width:100%;padding:12px;border:1px solid var(--border);border-radius:10px;background:white;font-family:inherit;font-size:15px}
+.categories{display:flex;gap:8px;overflow:auto;padding:3px 0 12px}.cat{white-space:nowrap;background:white;border:1px solid var(--border);color:var(--green)}.cat.active{background:var(--green);color:white}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.product{background:var(--card);border:1px solid var(--border);border-radius:15px;padding:14px;display:flex;flex-direction:column;gap:8px;box-shadow:0 2px 7px #00000008}
+.product .emoji{font-size:32px;background:#edf6ee;border-radius:12px;width:58px;height:58px;display:grid;place-items:center}
+.product h3{margin:0;font-size:17px}.small{font-size:13px;color:var(--muted)}.price{color:var(--green);font-weight:bold;font-size:18px}
+.addrow{display:flex;gap:8px;margin-top:auto}.qty{max-width:82px;text-align:center}
+.section{margin:24px 0}.section h2{font-size:19px}
+.cart{background:white;border:1px solid var(--border);border-radius:16px;padding:16px;margin-top:22px}
+.cartitem{display:grid;grid-template-columns:1fr 90px 100px auto;gap:8px;align-items:center;padding:10px 0;border-bottom:1px solid #edf1ed}
+.total{font-size:20px;font-weight:bold;color:var(--green);display:flex;justify-content:space-between;padding:14px 0}
+.formgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.formgrid .full{grid-column:1/-1}
+.adminpanel{display:none;background:#fff;border:2px solid #c9dfce;border-radius:16px;padding:16px;margin:20px 0}
+.adminpanel.show{display:block}.adminlist{display:grid;gap:8px}.adminitem{display:grid;grid-template-columns:1fr 130px 100px;gap:8px;align-items:center}
+footer{text-align:center;color:var(--muted);padding:24px;font-size:12px}
+@media(max-width:560px){.cartitem{grid-template-columns:1fr 75px 85px auto;font-size:13px}.formgrid{grid-template-columns:1fr}.adminitem{grid-template-columns:1fr 100px}.adminitem button{grid-column:1/-1}.brand{font-size:20px}}
+</style>
+</head>
+<body>
+<header><div class="headerrow"><div><div class="brand">🌱 المتجر الزراعي</div><div class="subtitle">حجز وشراء المواد الزراعية</div></div><button class="adminbtn" onclick="toggleAdmin()">إدارة المتجر</button></div></header>
+<main>
+<div class="searchrow"><input id="search" placeholder="ابحث عن مادة زراعية..." oninput="renderProducts()"></div>
+<div class="categories" id="categories"></div>
+<section class="section"><div class="grid" id="products"></div></section>
+<section class="cart" id="cart">
+<h2>🛒 سلة الحجز</h2><div id="cartitems"></div>
+<div class="total"><span>المجموع الكلي</span><span id="total">0 د.ع</span></div>
+<div class="formgrid">
+<input id="customer" placeholder="اسم الزبون">
+<input id="phone" placeholder="رقم هاتف الزبون">
+<input class="full" id="notes" placeholder="ملاحظات (اختياري)">
+</div>
+<button class="primary" style="width:100%;margin-top:12px" onclick="sendOrder()">إرسال الحجز عبر واتساب</button>
+</section>
+<section class="adminpanel" id="admin">
+<h2>⚙️ إدارة المواد والأسعار</h2><p class="small">رمز الدخول الافتراضي: 1234 (يمكن تغييره في الكود)</p>
+<div class="formgrid">
+<input id="newname" placeholder="اسم المادة">
+<select id="newcat"><option>أسمدة</option><option>مبيدات</option><option>بذور</option><option>مغذيات ومحفزات</option><option>أدوات زراعية</option></select>
+<input id="newunit" placeholder="العبوة / الوحدة" value="عبوة">
+<input id="newprice" type="number" placeholder="السعر بالدينار">
+</div><button class="primary" onclick="addProduct()" style="margin-top:10px">إضافة مادة</button>
+<h3>المواد الحالية (تعديل السعر أو حذف)</h3><div class="adminlist" id="adminlist"></div>
+<button class="secondary" onclick="exportData()" style="margin-top:12px">تصدير قائمة المواد JSON</button>
+<input type="file" accept=".json" onchange="importData(event)" style="margin-top:8px">
+</section>
+</main><footer>المتجر الزراعي • الطلبات ترسل إلى واتساب 07707024070</footer>
+<script>
+const WA="07707024070";
+const defaults=[
+["سماد NPK 20-20-20","أسمدة","1 كغم",25000],["سماد اليوريا Urea","أسمدة","1 كغم",15000],["سلفات البوتاسيوم","أسمدة","1 كغم",20000],["نترات الكالسيوم","أسمدة","1 كغم",18000],["حمض الفوسفوريك","أسمدة","1 لتر",15000],
+["مبيد حشري عام","مبيدات","250 مل",10000],["مبيد حشري عام","مبيدات","500 مل",18000],["مبيد فطري","مبيدات","250 غم",12000],["مبيد فطري","مبيدات","500 غم",20000],["مبيد أعشاب","مبيدات","1 لتر",25000],["مبيد أكاروسي","مبيدات","250 مل",15000],["مبيد نحاسي","مبيدات","500 غم",12000],
+["بذور الطماطم","بذور","عبوة",5000],["بذور الخيار","بذور","عبوة",5000],["بذور البطيخ","بذور","عبوة",7000],["بذور الباذنجان","بذور","عبوة",5000],
+["أحماض أمينية","مغذيات ومحفزات","1 لتر",15000],["هيوميك أسيد","مغذيات ومحفزات","1 لتر",12000],["طحالب بحرية","مغذيات ومحفزات","1 لتر",20000],["عناصر صغرى","مغذيات ومحفزات","500 غم",12000],["حديد مخلبي","مغذيات ومحفزات","250 غم",15000],["بورون","مغذيات ومحفزات","250 مل",10000],["زنك","مغذيات ومحفزات","250 مل",10000],["كالسيوم بورون","مغذيات ومحفزات","1 لتر",18000],
+["بخاخ يدوي","أدوات زراعية","1 لتر",10000],["بخاخ يدوي","أدوات زراعية","2 لتر",15000],["بخاخ ظهر","أدوات زراعية","16 لتر",45000],["خرطوم ري","أدوات زراعية","متر",1000],["مقص تقليم","أدوات زراعية","قطعة",15000],["شريط تنقيط","أدوات زراعية","لفة",25000],["قفازات زراعية","أدوات زراعية","زوج",3000],["مصيدة حشرات لاصقة","أدوات زراعية","قطعة",2000]
+].map((x,i)=>({id:i+1,name:x[0],category:x[1],unit:x[2],price:x[3]}));
+let products=JSON.parse(localStorage.getItem("ag_products")||"null")||defaults;
+let cart={};let category="الكل";
+function save(){localStorage.setItem("ag_products",JSON.stringify(products))}
+function money(n){return Number(n||0).toLocaleString("en-US")+" د.ع"}
+function renderCats(){let cats=["الكل",...new Set(products.map(p=>p.category))];document.getElementById("categories").innerHTML=cats.map(c=>`<button class="cat ${c===category?'active':''}" onclick="category='${c}';renderCats();renderProducts()">${c}</button>`).join("")}
+function renderProducts(){let q=document.getElementById("search").value.trim().toLowerCase();let list=products.filter(p=>(category==="الكل"||p.category===category)&&p.name.toLowerCase().includes(q));document.getElementById("products").innerHTML=list.map(p=>`<div class="product"><div class="emoji">🌿</div><h3>${esc(p.name)}</h3><div class="small">${esc(p.category)} • ${esc(p.unit)}</div><div class="price">${money(p.price)}</div><div class="addrow"><input class="qty" type="number" min="1" value="1" id="q${p.id}"><button class="primary" onclick="addCart(${p.id})">إضافة للسلة</button></div></div>`).join("")||"<p>لا توجد مواد مطابقة.</p>"}
+function addCart(id){let q=Math.max(1,parseInt(document.getElementById("q"+id).value)||1);cart[id]=(cart[id]||0)+q;renderCart()}
+function renderCart(){let entries=Object.entries(cart).filter(([id,q])=>q>0);let total=0;document.getElementById("cartitems").innerHTML=entries.map(([id,q])=>{let p=products.find(x=>x.id==id);if(!p)return "";let sub=p.price*q;total+=sub;return `<div class="cartitem"><div>${esc(p.name)}<div class="small">${money(p.price)} / ${esc(p.unit)}</div></div><input type="number" min="1" value="${q}" onchange="cart[${id}]=Math.max(1,parseInt(this.value)||1);renderCart()"><div>${money(sub)}</div><button class="danger" onclick="delete cart[${id}];renderCart()">×</button></div>`}).join("")||"<p class='small'>السلة فارغة. أضف مواد للبدء.</p>";document.getElementById("total").textContent=money(total)}
+function sendOrder(){let entries=Object.entries(cart).filter(([id,q])=>q>0);if(!entries.length){alert("السلة فارغة");return}let name=document.getElementById("customer").value.trim();let phone=document.getElementById("phone").value.trim();if(!name||!phone){alert("يرجى إدخال اسم الزبون ورقم الهاتف");return}let lines=entries.map(([id,q],i)=>{let p=products.find(x=>x.id==id);return `${i+1}. ${p.name} (${p.unit})\\n   الكمية: ${q}\\n   سعر الوحدة: ${money(p.price)}\\n   المجموع: ${money(p.price*q)}`});let total=entries.reduce((s,[id,q])=>s+products.find(x=>x.id==id).price*q,0);let msg=`طلب حجز مواد زراعية\\nاسم الزبون: ${name}\\nرقم الهاتف: ${phone}\\n\\n${lines.join("\\n\\n")}\\n\\nالمجموع الكلي: ${money(total)}\\nملاحظات: ${document.getElementById("notes").value||"لا يوجد"}`;window.open("https://wa.me/964"+WA.slice(1)+"?text="+encodeURIComponent(msg),"_blank")}
+function toggleAdmin(){let panel=document.getElementById("admin");if(panel.classList.contains("show")){panel.classList.remove("show");return}let pin=prompt("أدخل رمز إدارة المتجر");if(pin==="1234"){panel.classList.add("show");renderAdmin()}else if(pin!==null)alert("رمز الدخول غير صحيح")}
+function renderAdmin(){document.getElementById("adminlist").innerHTML=products.map(p=>`<div class="adminitem"><div>${esc(p.name)} <small>(${esc(p.unit)})</small></div><input type="number" value="${p.price}" id="price${p.id}"><button class="secondary" onclick="updatePrice(${p.id})">حفظ السعر</button><button class="danger" onclick="removeProduct(${p.id})">حذف</button></div>`).join("")}
+function updatePrice(id){let p=products.find(x=>x.id==id);p.price=Math.max(0,Number(document.getElementById("price"+id).value)||0);save();renderProducts();renderCart();renderAdmin()}
+function removeProduct(id){if(confirm("هل تريد حذف المادة؟")){products=products.filter(p=>p.id!=id);delete cart[id];save();renderCats();renderProducts();renderCart();renderAdmin()}}
+function addProduct(){let name=document.getElementById("newname").value.trim(),cat=document.getElementById("newcat").value,unit=document.getElementById("newunit").value.trim()||"قطعة",price=Number(document.getElementById("newprice").value);if(!name||!price){alert("أدخل اسم المادة والسعر");return}products.push({id:Date.now(),name,category:cat,unit,price});save();renderCats();renderProducts();renderAdmin();document.getElementById("newname").value="";document.getElementById("newprice").value=""}
+function exportData(){let blob=new Blob([JSON.stringify(products,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="agricultural_products.json";a.click();URL.revokeObjectURL(a.href)}
+function importData(e){let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{try{products=JSON.parse(r.result);save();renderCats();renderProducts();renderCart();renderAdmin();alert("تم استيراد المواد")}catch{alert("ملف غير صالح")}};r.readAsText(f)}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+renderCats();renderProducts();renderCart();
+</script></body></html>
